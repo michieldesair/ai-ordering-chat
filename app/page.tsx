@@ -1,9 +1,9 @@
-import ChatBot from './components/ChatBot';
+import Chat from './components/Chat';
 
 export default function Home() {
   return (
     <main>
-      <ChatBot />
+      <Chat />
     </main>
   );
 }
