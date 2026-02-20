@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import ReactMarkdown from 'react-markdown';
 
 interface ChatWindowProps {
   messages: UIMessage[];
@@ -92,8 +93,18 @@ export default function ChatWindow({
                       : 'bg-card border text-card-foreground rounded-tl-xs'
                   }`}
                 >
-                  {message.parts.map((part, index: number) =>
-                    part.type === 'text' ? <span key={index}>{part.text}</span> : null,
+                  {message.parts.map((part, index) =>
+                    part.type === 'text' ? (
+                      <div
+                        key={index}
+                        className="prose prose-sm max-w-none wrap-break-words 
+                        prose-p:leading-tight prose-p:my-1
+                        prose-ul:list-disc prose-ul:ml-4
+                        prose-strong:text-inherit text-inherit"
+                      >
+                        <ReactMarkdown>{part.text}</ReactMarkdown>
+                      </div>
+                    ) : null,
                   )}
                 </div>
               </div>
