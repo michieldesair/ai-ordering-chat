@@ -1,11 +1,11 @@
+import { useEffect, useRef } from 'react';
 import { X, Send, Loader2, BotMessageSquare } from 'lucide-react';
+import { UIMessage } from 'ai';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useEffect, useRef } from 'react';
-import { UIMessage } from 'ai';
 
 interface ChatWindowProps {
   messages: UIMessage[];
@@ -14,12 +14,6 @@ interface ChatWindowProps {
   setInput: (v: string) => void;
   status: string;
   onClose: () => void;
-}
-
-interface MessagePart {
-  type: 'text' | 'image';
-  text?: string;
-  url?: string;
 }
 
 export default function ChatWindow({
