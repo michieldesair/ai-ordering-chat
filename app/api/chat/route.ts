@@ -1,12 +1,53 @@
-import { convertToModelMessages, gateway, stepCountIs, streamText, UIMessage } from 'ai';
+import {
+  convertToModelMessages,
+  gateway,
+  stepCountIs,
+  streamText,
+  UIMessage,
+  tool,
+  InferUITools,
+  UIDataTypes,
+} from 'ai';
 import { MaximVercelProviderMetadata, wrapMaximAISDKModel } from '@maximai/maxim-js/vercel-ai-sdk';
-import { openai } from '@ai-sdk/openai';
+import { z } from 'zod';
 
-import { RESTAURANT_DATA } from '@/data/restaurant-data-example';
+import { searchDocuments } from '@/lib/search';
 import { getMaximLogger } from '@/lib/maxim';
 
+const tools = {
+  searchKnowledgeBase: tool({
+    description:
+      'Doorzoek de database voor informatie over het bedrijf zoals het menu, openingsuren of algemene bedrijfsinformatie.',
+    inputSchema: z.object({
+      query: z
+        .string()
+        .describe('Focus op kernwoorden zoals productnamen of categorieën voor de beste match.'),
+    }),
+    execute: async ({ query }) => {
+      try {
+        const results = await searchDocuments(query, 5, 0.35);
+        if (results.length === 0) {
+          console.log('Geen relevante informatie gevonden in de database');
+          return 'Geen relevante informatie gevonden in de database';
+        }
+
+        const formattedResults = results.map((r, i) => `[${i + 1}] ${r.content}`).join('\n\n');
+        console.info(formattedResults);
+
+        return formattedResults;
+      } catch (err) {
+        console.error('Zoek error:', err);
+        return 'Error bij het opzoeken: ' + err;
+      }
+    },
+  }),
+};
+
+export type ChatTools = InferUITools<typeof tools>;
+export type ChatMessage = UIMessage<never, UIDataTypes, ChatTools>;
+
 export async function POST(req: Request) {
-  const { messages, sessionId: bodySessionId }: { messages: UIMessage[]; sessionId?: string } =
+  const { messages, sessionId: bodySessionId }: { messages: ChatMessage[]; sessionId?: string } =
     await req.json();
 
   const cookieHeader: string | null = req.headers.get('cookie');
@@ -24,7 +65,7 @@ export async function POST(req: Request) {
     console.warn('Maxim logger is not available. Proceeding without logging.');
     throw new Error('Maxim logger not initialized');
   }
-  const model = wrapMaximAISDKModel(gateway('gpt-4o-mini'), logger);
+  const model = wrapMaximAISDKModel(gateway('openai/gpt-4.1-mini'), logger);
 
   const lastUserMessage = messages.filter((m) => m.role === 'user').pop();
   const messageCount = messages.length;
@@ -41,31 +82,20 @@ export async function POST(req: Request) {
   });
 
   const result = streamText({
-    model: model,
+    model,
+    tools,
     messages: await convertToModelMessages(messages),
-    stopWhen: stepCountIs(1),
+    stopWhen: stepCountIs(5),
     system: `
-      Je bent de virtuele assistent van ${RESTAURANT_DATA.restaurant}. Jouw enige taak is het informeren van klanten op basis van de verstrekte data.
+      Je bent de virtuele assistent van De Friturie. 
+      GEBRUIK de tool 'searchKnowledgeBase' om informatie te vinden.
+      
+      BELANGRIJKE REGELS:
+      - Antwoord DIRECT met de informatie uit de database. Gebruik enkel de kennis die je hebt uit de database, verzin zelf niks.
+      - Beantwoord altijd kort en bondig, en geef een antwoord op de vraag.
+      - Geef simpelweg aan dat je het niet weet, zeg niet dat je beschikbare informatie raadpleegt of iets dergelijks.
 
-      HUIDIGE CONTEXT:
-      - Datum: ${huidigeDatum}
-      - Tijd: ${new Date().toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' })}
-      - RESTAURANT DATA: ${JSON.stringify(RESTAURANT_DATA)}
-
-      STRIKTE RICHTLIJNEN:
-      1. NIET VERZINNEN: Als informatie (zoals een prijs of een specifieke snack) niet in de JSON-data staat, zeg je dat je die informatie niet hebt. Doe geen aannames.
-      2. GEEN TRANSACTIES: Je kunt GEEN bestellingen verwerken, betalingen aannemen of acties uitvoeren. Als een klant wil bestellen, verwijs je ze naar het telefoonnummer of de fysieke zaak.
-      3. ANTWOORD DIRECT: Vermijd inleidingen zoals "Vandaag op vrijdag...". Geef direct antwoord op de vraag. 
-         - Vraag: "Tot hoelaat open?" 
-         - Antwoord: "We zijn vandaag open tot 21:00."
-         - Controleer Geef aan als we vandaag gesloten zijn, bijvoorbeeld: "We zijn vandaag gesloten, maar we zijn morgen weer open van {openingsuren}."
-      4. REKENEN MET TIJD: Gebruik de huidige tijd om te bepalen of de zaak open of gesloten is op dit moment.
-      5. TONE-OF-VOICE: Professioneel, feitelijk en kort. Geen overdreven enthousiasme of "chatbot-praat".
-      6. MARKDOWN: Gebruik enkel **vetgedrukte tekst** voor uren en prijzen om de leesbaarheid te vergroten. Gebruik geen tabellen tenzij de klant om een lijst vraagt.
-      7. PRIJZEN: Geef een prijs alleen als deze expliciet in de data staat. Zeg anders dat je die informatie niet hebt. Geef prijzen in het volgende formaat: "€{prijs},-".
-      8. SNACKS: Als een klant vraagt naar snacks, geef dan alleen de snacks weer die in de data staan. Geef alle prijzen weer zoals ze in de data staan, inclusief eventuele variaties (zoals "klein" of "groot").
-      FOUTMELDING:
-      Indien een klant iets vraagt wat buiten je data valt, antwoord je: "Ik heb helaas geen informatie over [onderwerp]. Je kunt het beste even contact opnemen met de zaak."
+      Vandaag is het: ${huidigeDatum}
     `,
     providerOptions: {
       maxim: {

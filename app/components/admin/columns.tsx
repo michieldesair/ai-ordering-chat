@@ -1,17 +1,13 @@
 'use client';
 
 import { type ColumnDef } from '@tanstack/react-table';
-
-import { Badge } from '@/components/ui/badge';
+import { type InsertDocument } from '@/lib/db-schema';
 import { Checkbox } from '@/components/ui/checkbox';
 
 import { DataTableColumnHeader } from './data-table-column-header';
 import { DataTableRowActions } from './data-table-row-actions';
 
-import { types } from '@/data/data';
-import { type Vector } from '@/data/schema';
-
-export const columns: ColumnDef<Vector>[] = [
+export const columns: ColumnDef<InsertDocument>[] = [
   {
     id: 'select',
     header: ({ table }) => (
@@ -43,31 +39,18 @@ export const columns: ColumnDef<Vector>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: 'type',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Type" />,
+    accessorKey: 'content',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} className="max-w-175" title="Content" />
+    ),
     cell: ({ row }) => {
-      const type = types.find((type) => type.value === row.original.type);
-
-      return (
-        <div className="flex gap-2">
-          {type && (
-            <Badge variant="outline" style={{ backgroundColor: type.color }}>
-              {type.label}
-            </Badge>
-          )}
-        </div>
-      );
+      return <div className="truncate md:whitespace-normal text-sm">{row.getValue('content')}</div>;
     },
   },
   {
-    accessorKey: 'text_content',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Content" />,
-    cell: ({ row }) => <div className="flex">{row.getValue('text_content')}</div>,
-  },
-  {
-    accessorKey: 'vector',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Vector" />,
-    cell: ({ row }) => <div className="w-[160px]">{row.getValue('vector')}</div>,
+    accessorKey: 'embedding',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Embedding" />,
+    cell: ({ row }) => <div className="max-w-[160px] truncate">{row.getValue('embedding')}</div>,
     filterFn: (row, id, value) => {
       return value.includes(row.getValue(id));
     },

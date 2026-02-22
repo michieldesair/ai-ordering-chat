@@ -19,15 +19,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 import { types } from '@/data/data';
-import { vectorSchema } from '@/data/schema';
+import { type InsertDocument } from '@/lib/db-schema';
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
 }
 
 export function DataTableRowActions<TData>({ row }: DataTableRowActionsProps<TData>) {
-  const vector = vectorSchema.parse(row.original);
-
+  const vector = row.original as InsertDocument;
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -39,7 +38,7 @@ export function DataTableRowActions<TData>({ row }: DataTableRowActionsProps<TDa
       <DropdownMenuContent align="end" className="w-[160px]">
         <DropdownMenuItem>Edit</DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuSub>
+        {/* <DropdownMenuSub>
           <DropdownMenuSubTrigger>Label</DropdownMenuSubTrigger>
           <DropdownMenuSubContent>
             <DropdownMenuRadioGroup value={vector.type}>
@@ -50,7 +49,7 @@ export function DataTableRowActions<TData>({ row }: DataTableRowActionsProps<TDa
               ))}
             </DropdownMenuRadioGroup>
           </DropdownMenuSubContent>
-        </DropdownMenuSub>
+        </DropdownMenuSub> */}
         <DropdownMenuSeparator />
         <DropdownMenuItem variant="destructive">Verwijder</DropdownMenuItem>
       </DropdownMenuContent>

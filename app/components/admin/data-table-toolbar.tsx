@@ -9,6 +9,7 @@ import { DataTableViewOptions } from './data-table-view-options';
 
 import { types } from '@/data/data';
 import { DataTableFacetedFilter } from './data-table-faceted-filter';
+import { AddVector } from './add-vector-dialog';
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
@@ -22,17 +23,17 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
       <div className="flex flex-1 items-center gap-3">
         <Input
           placeholder="Zoek op content..."
-          value={(table.getColumn('text_content')?.getFilterValue() as string) ?? ''}
-          onChange={(event) => table.getColumn('text_content')?.setFilterValue(event.target.value)}
+          value={(table.getColumn('content')?.getFilterValue() as string) ?? ''}
+          onChange={(event) => table.getColumn('content')?.setFilterValue(event.target.value)}
           className="h-8 w-[150px] lg:w-[250px]"
         />
-        {table.getColumn('type') && (
+        {/* {table.getColumn('type') && (
           <DataTableFacetedFilter
             column={table.getColumn('type')}
             title="Filter op Type"
             options={types}
           />
-        )}
+        )} */}
         {/* {table.getColumn('priority') && (
           <DataTableFacetedFilter
             column={table.getColumn('priority')}
@@ -49,10 +50,7 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
       </div>
       <div className="flex items-center gap-2">
         <DataTableViewOptions table={table} />
-        <Button size="sm">
-          <BadgePlus />
-          Nieuwe vector
-        </Button>
+        <AddVector />
       </div>
     </div>
   );

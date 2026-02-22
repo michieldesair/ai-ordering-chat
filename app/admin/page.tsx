@@ -1,33 +1,9 @@
-import { Vector } from '@/data/schema';
 import { columns } from '../components/admin/columns';
 import { DataTable } from '../components/admin/data-table';
-
-async function getData(): Promise<Vector[]> {
-  return [
-    {
-      id: '8782',
-      text_content: `Medium frietje stoofvlees. Prijs: €6.50. Allergieën: ['noten']`,
-      type: 'menu_item',
-      vector: '[]',
-    },
-    {
-      id: '7878',
-      text_content: `Klein frietje stoofvlees. Prijs: €6.50. Allergieën: ['noten']`,
-      type: 'menu_item',
-      vector: '[]',
-    },
-    {
-      id: '7839',
-      text_content:
-        'Onze openingsuren zijn: maandag tot en met vrijdag van 8:00 - 12:00 en van 15:00 tot 21:00.',
-      type: 'opening_hours',
-      vector: '[]',
-    },
-  ];
-}
+import { getDocuments } from '@/lib/get-documents';
 
 export default async function AdminPage() {
-  const data = await getData();
+  const data = await getDocuments();
 
   return (
     // min-h-screen ensures it's centered vertically relative to the whole page
