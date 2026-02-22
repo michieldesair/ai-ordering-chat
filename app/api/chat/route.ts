@@ -1,11 +1,35 @@
 import { convertToModelMessages, stepCountIs, streamText, UIMessage } from 'ai';
+import { MaximVercelProviderMetadata, wrapMaximAISDKModel } from '@maximai/maxim-js/vercel-ai-sdk';
+import { openai } from '@ai-sdk/openai';
 
 import { RESTAURANT_DATA } from '@/data/restaurant-data-example';
-
-export const maxDuration = 30; // max response time
+import { getMaximLogger } from '@/lib/maxim';
 
 export async function POST(req: Request) {
-  const { messages }: { messages: UIMessage[] } = await req.json();
+  const { messages, sessionId: bodySessionId }: { messages: UIMessage[]; sessionId?: string } =
+    await req.json();
+
+  const cookieHeader: string | null = req.headers.get('cookie');
+  const cookieSessionId = cookieHeader
+    ? cookieHeader
+        .split(';')
+        .map((cookie) => cookie.trim())
+        .find((cookie) => cookie.startsWith('sessionId='))
+        ?.split('=')[1]
+    : null;
+  const sessionId = bodySessionId || cookieSessionId || `session-${Date.now()}`;
+
+  const logger = await getMaximLogger();
+  if (!logger) {
+    console.warn('Maxim logger is not available. Proceeding without logging.');
+    throw new Error('Maxim logger not initialized');
+  }
+  const model = wrapMaximAISDKModel(openai('gpt-4o-mini'), logger);
+
+  const lastUserMessage = messages.filter((m) => m.role === 'user').pop();
+  const messageCount = messages.length;
+  const hasTools = messages.some((m) => m.parts.some((part) => part.type.includes('tool')));
+  const lastUserContent = lastUserMessage?.parts?.find((part) => part.type === 'text')?.text || '';
 
   const huidigeDatum = new Date().toLocaleDateString('nl-BE', {
     weekday: 'long',
@@ -17,7 +41,8 @@ export async function POST(req: Request) {
   });
 
   const result = streamText({
-    model: 'openai/gpt-4o-mini',
+    model: model,
+    messages: await convertToModelMessages(messages),
     stopWhen: stepCountIs(1),
     system: `
       Je bent de virtuele assistent van ${RESTAURANT_DATA.restaurant}. Jouw enige taak is het informeren van klanten op basis van de verstrekte data.
@@ -42,7 +67,28 @@ export async function POST(req: Request) {
       FOUTMELDING:
       Indien een klant iets vraagt wat buiten je data valt, antwoord je: "Ik heb helaas geen informatie over [onderwerp]. Je kunt het beste even contact opnemen met de zaak."
     `,
-    messages: await convertToModelMessages(messages),
+    providerOptions: {
+      maxim: {
+        sessionName: `ai-chat-${sessionId}`,
+        sessionId: sessionId,
+        traceName: `Chat Sessie - ${messageCount} ${messageCount === 1 ? 'bericht' : 'berichten'} - ${hasTools ? 'met tools' : 'zonder tools'}`,
+        generationName: `GPT-4o-mini antwoord op: "${lastUserContent.slice(0, 50)}${lastUserContent.length > 50 ? '...' : ''}"`,
+        sessionTags: {
+          application: 'ai-ordering-chat',
+          version: '1.0',
+          environment: process.env.NODE_ENV || 'development',
+          sessionId: sessionId,
+        },
+        traceTags: {
+          endpoint: '/api/chat',
+          type: 'chatbot',
+          messageCount: messageCount.toString(),
+          hasTools: hasTools.toString(),
+          userQuery: lastUserContent.substring(0, 100),
+          sessionId: sessionId,
+        },
+      } as MaximVercelProviderMetadata,
+    },
   });
 
   return result.toUIMessageStreamResponse();
