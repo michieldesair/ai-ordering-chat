@@ -1,4 +1,4 @@
-import { convertToModelMessages, stepCountIs, streamText, UIMessage } from 'ai';
+import { convertToModelMessages, gateway, stepCountIs, streamText, UIMessage } from 'ai';
 import { MaximVercelProviderMetadata, wrapMaximAISDKModel } from '@maximai/maxim-js/vercel-ai-sdk';
 import { openai } from '@ai-sdk/openai';
 
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     console.warn('Maxim logger is not available. Proceeding without logging.');
     throw new Error('Maxim logger not initialized');
   }
-  const model = wrapMaximAISDKModel(openai('gpt-4o-mini'), logger);
+  const model = wrapMaximAISDKModel(gateway('gpt-4o-mini'), logger);
 
   const lastUserMessage = messages.filter((m) => m.role === 'user').pop();
   const messageCount = messages.length;
