@@ -135,7 +135,7 @@ export default function ChatWindow({
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Tot hoelaat zijn jullie vandaag geopend?"
+            placeholder="Typ hier je vraag..."
             className="flex-1 rounded-md border border-input bg-muted px-3 py-2
             focus:ring-2 focus:ring-primary-foreground focus:outline-none
             disabled:cursor-not-allowed disabled:opacity-50 h-12"

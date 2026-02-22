@@ -12,7 +12,7 @@ export function ChatButton({ onClick }: { onClick: () => void }) {
         <Button
           onClick={onClick}
           size="icon"
-          className="size-16 rounded-full border border-primary
+          className="size-18 rounded-full border border-primary
           shadow-2xl transition-all hover:scale-110 active:scale-95 duration-200
           bg-linear-to-br from-orange-200 via-primary to-orange-200"
         >
