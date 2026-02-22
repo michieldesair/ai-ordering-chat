@@ -38,12 +38,12 @@ export default function ChatWindow({
   }, [messages, status]);
   return (
     <Card
-      className="w-95 h-137.5 mb-4 flex flex-col p-0 shadow-2xl
-    border-2 border-primary animate-in slide-in-from-bottom-5"
+      className="w-screen h-screen lg:w-95 lg:h-137.5 lg:fixed lg:bottom-12 lg:right-12 lg:mb-4 flex flex-col p-0 shadow-2xl
+    lg:border-2 border-primary animate-in slide-in-from-bottom-5"
     >
       <CardHeader
         className="bg-linear-to-br from-orange-300 via-primary to-orange-300 
-             flex flex-row items-center justify-between p-4 rounded-t-lg shadow-sm"
+             flex flex-row items-center justify-between p-4 lg:rounded-t-lg shadow-sm"
       >
         <CardTitle className="flex flex-row gap-2 items-center text-primary-foreground">
           {' '}

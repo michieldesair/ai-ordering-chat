@@ -17,7 +17,7 @@ export default function ChatBot() {
   const [input, setInput] = useState('');
 
   return (
-    <div className="fixed bottom-10 right-10 z-50 flex flex-col items-end">
+    <div className="z-50 flex flex-col items-end">
       {isOpen ? (
         <ChatWindow
           messages={messages}
